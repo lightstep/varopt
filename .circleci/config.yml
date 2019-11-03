@@ -1,0 +1,16 @@
+version: 2
+
+jobs:
+  test:
+    working_directory: ~/go/src/github.com/lightstep/varopt
+    docker:
+      - image: circleci/golang:1.15
+    steps:
+      - checkout
+      - run: go test -v ./...
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
