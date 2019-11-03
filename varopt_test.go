@@ -1,9 +1,12 @@
+// Copyright 2019, LightStep Inc.
+
 package varopt_test
 
 import (
 	"math"
 	"testing"
 
+	"github.com/lightstep/varopt"
 	"github.com/stretchr/testify/require"
 )
 
@@ -11,9 +14,8 @@ import (
 // There are odd and even numbers, in equal amount
 // There are last-digits 0-9 in equal amount
 //
-// Much like simple_test.go, we will test the mean is correct and,
-// because unbiased, also the odd/even and last-digit-0-9 groupings
-// will be balanced.
+// We will test the mean is correct and, because unbiased, also the
+// odd/even and last-digit-0-9 groupings will be balanced.
 const (
 	numBlocks      = 100
 	popSize        = 1e7
@@ -53,7 +55,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 		extra = popSize - bigSize*numBig - smallSize*numSmall
 	)
 
-	population := make([]Sample, popSize)
+	population := make([]varopt.Sample, popSize)
 
 	psum := 0.0
 
@@ -67,17 +69,17 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 	// 	population[i], population[j] = population[j], population[i]
 	// })
 
-	smallBlocks := make([][]Sample, numSmall)
-	bigBlocks := make([][]Sample, numBig)
+	smallBlocks := make([][]varopt.Sample, numSmall)
+	bigBlocks := make([][]varopt.Sample, numBig)
 
 	for i := 0; i < numSmall; i++ {
-		smallBlocks[i] = make([]Sample, smallSize)
+		smallBlocks[i] = make([]varopt.Sample, smallSize)
 	}
 	for i := 0; i < numBig; i++ {
 		if i == 0 {
-			bigBlocks[0] = make([]Sample, bigSize+extra)
+			bigBlocks[0] = make([]varopt.Sample, bigSize+extra)
 		} else {
-			bigBlocks[i] = make([]Sample, bigSize)
+			bigBlocks[i] = make([]varopt.Sample, bigSize)
 		}
 	}
 
@@ -98,13 +100,13 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 
 	maxDiff := 0.0
 
-	func(allBlockLists ...[][][]Sample) {
+	func(allBlockLists ...[][][]varopt.Sample) {
 		for _, blockLists := range allBlockLists {
-			varopt := NewVaropt(sampleSize)
+			vsample := varopt.NewVaropt(sampleSize)
 
 			for _, blockList := range blockLists {
 				for _, block := range blockList {
-					simple := NewSimple(sampleSize)
+					simple := varopt.NewSimple(sampleSize)
 
 					for _, s := range block {
 						simple.Add(s)
@@ -112,7 +114,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 
 					weight := simple.Weight()
 					for i := 0; i < simple.Size(); i++ {
-						varopt.Add(simple.Get(i), weight)
+						vsample.Add(simple.Get(i), weight)
 					}
 				}
 			}
@@ -121,8 +123,8 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 			odd := 0.0
 			even := 0.0
 
-			for i := 0; i < varopt.Size(); i++ {
-				v, w := varopt.Get(i)
+			for i := 0; i < vsample.Size(); i++ {
+				v, w := vsample.Get(i)
 				vi := v.(int)
 				if vi%2 == 0 {
 					even++
@@ -140,7 +142,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 			require.InEpsilon(t, odd, even, epsilon)
 		}
 	}(
-		[][][]Sample{bigBlocks, smallBlocks},
-		[][][]Sample{smallBlocks, bigBlocks},
+		[][][]varopt.Sample{bigBlocks, smallBlocks},
+		[][][]varopt.Sample{smallBlocks, bigBlocks},
 	)
 }

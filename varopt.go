@@ -1,7 +1,4 @@
-// Stream sampling for variance-optimal estimation of subset sums
-// Edith Cohen, Nick Duffield, Haim Kaplan, Carsten Lund, Mikkel Thorup
-// 2008
-// https://arxiv.org/pdf/0803.0473.pdf
+// Copyright 2019, LightStep Inc.
 
 package varopt
 
@@ -11,6 +8,11 @@ import (
 	"math/rand"
 )
 
+// Varopt implements the algorithm from Stream sampling for
+// variance-optimal estimation of subset sums Edith Cohen, Nick
+// Duffield, Haim Kaplan, Carsten Lund, Mikkel Thorup 2008
+//
+// https://arxiv.org/pdf/0803.0473.pdf
 type Varopt struct {
 	// Large-weight items
 	L largeHeap
@@ -30,6 +32,8 @@ type Varopt struct {
 	totalCount  int
 	totalWeight float64
 }
+
+type Sample interface{}
 
 type vsample struct {
 	sample Sample
