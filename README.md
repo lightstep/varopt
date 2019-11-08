@@ -17,7 +17,7 @@ Algorithm R from [Random sampling with a
 reservoir](https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R)
 (1985) by Jeffrey Vitter.
 
-# Usage: Natural Weights
+## Usage: Natural Weights
 
 A typical use of VarOpt sampling is to estimate network flows using
 sample packets.  In this use-case, the weight applied to each sample
@@ -30,7 +30,7 @@ population.
 
 See [weighted_test.go](https://github.com/lightstep/varopt/blob/master/weighted_test.go) for an example.
 
-# Usage: Inverse-probability Weights
+## Usage: Inverse-probability Weights
 
 Another use for VarOpt sampling uses inverse-probability weights to
 estimate frequencies while simultaneously controlling sample
@@ -48,3 +48,11 @@ its sample weight (computed by VarOpt) divided by its original weight
 (the inverse-probability).
 
 See [frequency_test.go](https://github.com/lightstep/varopt/blob/master/frequency_test.go) for an example.
+
+## Usage: Merging Samples
+
+VarOpt supports merging independently collected samples one
+observation at a time.  This is useful for building distributed
+sampling schemes.  In this use-case, each node in a distributed system
+computes a weighted sample.  To combine samples, simply input all the
+observations and their corresponding weights into a new VarOpt sample.
