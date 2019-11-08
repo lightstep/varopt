@@ -1,3 +1,7 @@
+[![Docs](https://godoc.org/github.com/lightstep/varopt?status.svg)](https://godoc.org/github.com/lightstep/varopt)
+
+# VarOpt Sampling Algorithm
+
 This is an implementation of VarOpt, an unbiased weighted sampling
 algorithm described in the paper [Stream sampling for variance-optimal
 estimation of subset sums](https://arxiv.org/pdf/0803.0473.pdf) (2008)
@@ -12,3 +16,35 @@ often useful in conjunction with weighed reservoir sampling, using
 Algorithm R from [Random sampling with a
 reservoir](https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R)
 (1985) by Jeffrey Vitter.
+
+# Usage: Natural Weights
+
+A typical use of VarOpt sampling is to estimate network flows using
+sample packets.  In this use-case, the weight applied to each sample
+is the size of the packet.  Beacuse VarOpt computes an unbiased
+sample, the sample data points can be summarized along secondary
+dimensions.  For example, we can select a subset of the sample
+according to a secondary attribute, sum the sample weights, and the
+result is expected value of the secondary attribute in the original
+population.
+
+See [weighted_test.go](https://github.com/lightstep/varopt/blob/master/weighted_test.go) for an example.
+
+# Usage: Inverse-probability Weights
+
+Another use for VarOpt sampling uses inverse-probability weights to
+estimate frequencies while simultaneously controlling sample
+diversity.  Suppose a sequence of observations can be naturally
+categorized into N different buckets.  The goal in this case is to
+compute a sample where each bucket is well represented, while
+maintaining frequency estimates.
+
+In this use-case, the weight assigned to each observation is the
+inverse probability of the bucket it belongs to.  The result of
+weighted sampling with inverse-probability weights is a uniform
+expectation, in this example we expect an equal number of observations
+falling into each bucket.  Each observation represents a frequency of
+its sample weight (computed by VarOpt) divided by its original weight
+(the inverse-probability).
+
+See [frequency_test.go](https://github.com/lightstep/varopt/blob/master/frequency_test.go) for an example.
