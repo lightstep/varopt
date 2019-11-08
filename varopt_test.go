@@ -4,6 +4,7 @@ package varopt_test
 
 import (
 	"math"
+	"math/rand"
 	"testing"
 
 	"github.com/lightstep/varopt"
@@ -99,10 +100,11 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 	require.Equal(t, len(population), pos)
 
 	maxDiff := 0.0
+	rnd := rand.New(rand.NewSource(98887))
 
 	func(allBlockLists ...[][][]varopt.Sample) {
 		for _, blockLists := range allBlockLists {
-			vsample := varopt.New(sampleSize)
+			vsample := varopt.New(sampleSize, rnd)
 
 			for _, blockList := range blockLists {
 				for _, block := range blockList {

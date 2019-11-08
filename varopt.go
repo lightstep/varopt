@@ -14,6 +14,9 @@ import (
 //
 // https://arxiv.org/pdf/0803.0473.pdf
 type Varopt struct {
+	// Random number generator
+	rnd *rand.Rand
+
 	// Large-weight items
 	L largeHeap
 
@@ -42,9 +45,10 @@ type vsample struct {
 
 type largeHeap []vsample
 
-func New(capacity int) *Varopt {
+func New(capacity int, rnd *rand.Rand) *Varopt {
 	return &Varopt{
 		capacity: capacity,
+		rnd:      rnd,
 	}
 }
 
@@ -99,7 +103,7 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 		}
 		s.X = s.X[:len(s.X)-1]
 	} else {
-		ti := rand.Intn(len(s.T))
+		ti := s.rnd.Intn(len(s.T))
 		s.T[ti], s.T[len(s.T)-1] = s.T[len(s.T)-1], s.T[ti]
 		s.T = s.T[:len(s.T)-1]
 	}
@@ -109,7 +113,7 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 
 func (s *Varopt) uniform() float64 {
 	for {
-		r := rand.Float64()
+		r := s.rnd.Float64()
 		if r != 0.0 {
 			return r
 		}
