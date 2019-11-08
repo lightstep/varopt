@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/lightstep/varopt"
+	"github.com/lightstep/varopt/simple"
 	"github.com/stretchr/testify/require"
 )
 
@@ -106,15 +107,15 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 
 			for _, blockList := range blockLists {
 				for _, block := range blockList {
-					simple := varopt.NewSimple(sampleSize, rnd)
+					ss := simple.New(sampleSize, rnd)
 
 					for _, s := range block {
-						simple.Add(s)
+						ss.Add(s)
 					}
 
-					weight := simple.Weight()
-					for i := 0; i < simple.Size(); i++ {
-						vsample.Add(simple.Get(i), weight)
+					weight := ss.Weight()
+					for i := 0; i < ss.Size(); i++ {
+						vsample.Add(ss.Get(i), weight)
 					}
 				}
 			}

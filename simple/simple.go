@@ -1,9 +1,11 @@
 // Copyright 2019, LightStep Inc.
 
-package varopt
+package simple
 
 import (
 	"math/rand"
+
+	"github.com/lightstep/varopt"
 )
 
 // Simple implements unweighted reservoir sampling using Algorithm R
@@ -12,13 +14,13 @@ import (
 type Simple struct {
 	capacity int
 	observed int
-	buffer   []Sample
+	buffer   []varopt.Sample
 	rnd      *rand.Rand
 }
 
-// NewSimple returns a simple reservoir sampler with given capacity
+// New returns a simple reservoir sampler with given capacity
 // (i.e., reservoir size) and random number generator.
-func NewSimple(capacity int, rnd *rand.Rand) *Simple {
+func New(capacity int, rnd *rand.Rand) *Simple {
 	return &Simple{
 		capacity: capacity,
 		rnd:      rnd,
@@ -27,11 +29,11 @@ func NewSimple(capacity int, rnd *rand.Rand) *Simple {
 
 // Add considers a new observation for the sample.  Items have unit
 // weight.
-func (s *Simple) Add(span Sample) {
+func (s *Simple) Add(span varopt.Sample) {
 	s.observed++
 
 	if s.buffer == nil {
-		s.buffer = make([]Sample, 0, s.capacity)
+		s.buffer = make([]varopt.Sample, 0, s.capacity)
 	}
 
 	if len(s.buffer) < s.capacity {
@@ -47,7 +49,7 @@ func (s *Simple) Add(span Sample) {
 }
 
 // Get returns the i'th selected item from the sample.
-func (s *Simple) Get(i int) Sample {
+func (s *Simple) Get(i int) varopt.Sample {
 	return s.buffer[i]
 }
 
