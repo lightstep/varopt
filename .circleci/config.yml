@@ -12,7 +12,7 @@ jobs:
             echo 'export GOPATH="$HOME/go"' >> $BASH_ENV
             source $BASH_ENV
       - checkout
-      - run: go test
+      - run: go test -v ./...
 
 workflows:
   version: 2
