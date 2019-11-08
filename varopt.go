@@ -171,7 +171,7 @@ func (s *Varopt) TotalCount() int {
 }
 
 // Tau returns the current large-weight threshold.  Weights larger
-// than Tau() carry their exact weight int he sample.  See the VarOpt
+// than Tau() carry their exact weight in the sample.  See the VarOpt
 // paper for details.
 func (s *Varopt) Tau() float64 {
 	return s.tau
