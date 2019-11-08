@@ -16,6 +16,8 @@ type Simple struct {
 	rnd      *rand.Rand
 }
 
+// NewSimple returns a simple reservoir sampler with given capacity
+// (i.e., reservoir size) and random number generator.
 func NewSimple(capacity int, rnd *rand.Rand) *Simple {
 	return &Simple{
 		capacity: capacity,
@@ -23,6 +25,8 @@ func NewSimple(capacity int, rnd *rand.Rand) *Simple {
 	}
 }
 
+// Add considers a new observation for the sample.  Items have unit
+// weight.
 func (s *Simple) Add(span Sample) {
 	s.observed++
 
@@ -42,22 +46,23 @@ func (s *Simple) Add(span Sample) {
 	}
 }
 
+// Get returns the i'th selected item from the sample.
 func (s *Simple) Get(i int) Sample {
 	return s.buffer[i]
 }
 
+// Get returns the number of items in the sample.  If the reservoir is
+// full, Size() equals Capacity().
 func (s *Simple) Size() int {
 	return len(s.buffer)
 }
 
+// Weight returns the adjusted weight of each item in the sample.
 func (s *Simple) Weight() float64 {
 	return float64(s.observed) / float64(s.Size())
 }
 
-func (s *Simple) Prob() float64 {
-	return 1 / s.Weight()
-}
-
-func (s *Simple) Observed() int {
+// Count returns the number of items that were observed.
+func (s *Simple) Count() int {
 	return s.observed
 }

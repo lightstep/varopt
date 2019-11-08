@@ -36,6 +36,9 @@ type Varopt struct {
 	totalWeight float64
 }
 
+// Sample is an empty interface that represents a sample item.
+// Sampling algorithms treat these as opaque, as their weight is
+// passed in separately.
 type Sample interface{}
 
 type vsample struct {
@@ -45,6 +48,8 @@ type vsample struct {
 
 type largeHeap []vsample
 
+// New returns a new Varopt sampler with given capacity (i.e.,
+// reservoir size) and random number generator.
 func New(capacity int, rnd *rand.Rand) *Varopt {
 	return &Varopt{
 		capacity: capacity,
@@ -52,6 +57,7 @@ func New(capacity int, rnd *rand.Rand) *Varopt {
 	}
 }
 
+// Add considers a new observation for the sample with given weight.
 func (s *Varopt) Add(sample Sample, weight float64) {
 	individual := vsample{
 		sample: sample,
@@ -131,6 +137,9 @@ func (s *Varopt) Get(i int) (Sample, float64) {
 	return s.T[i-len(s.L)].sample, s.tau
 }
 
+// GetOriginalWeight returns the original input weight of the sample
+// item that was passed to Add().  This can be useful for computing a
+// frequency from the adjusted sample weight.
 func (s *Varopt) GetOriginalWeight(i int) float64 {
 	if i < len(s.L) {
 		return s.L[i].weight
@@ -139,22 +148,31 @@ func (s *Varopt) GetOriginalWeight(i int) float64 {
 	return s.T[i-len(s.L)].weight
 }
 
+// Capacity returns the size of the reservoir.  This is the maximum
+// size of the sample.
 func (s *Varopt) Capacity() int {
 	return s.capacity
 }
 
+// Size returns the current number of items in the sample.  If the
+// reservoir is full, this returns Capacity().
 func (s *Varopt) Size() int {
 	return len(s.L) + len(s.T)
 }
 
+// TotalWeight returns the sum of weights that were passed to Add().
 func (s *Varopt) TotalWeight() float64 {
 	return s.totalWeight
 }
 
+// TotalCount returns the number of calls to Add().
 func (s *Varopt) TotalCount() int {
 	return s.totalCount
 }
 
+// Tau returns the current large-weight threshold.  Weights larger
+// than Tau() carry their exact weight int he sample.  See the VarOpt
+// paper for details.
 func (s *Varopt) Tau() float64 {
 	return s.tau
 }
