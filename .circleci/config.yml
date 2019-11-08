@@ -1,0 +1,21 @@
+version: 2
+
+jobs:
+  test:
+    working_directory: ~/go/src/github.com/lightstep/varopt
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - run:
+          name: "configure environment"
+          command: |
+            echo 'export GOPATH="$HOME/go"' >> $BASH_ENV
+            source $BASH_ENV
+      - checkout
+      - run: go test
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
