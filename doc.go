@@ -1,7 +1,7 @@
 // Copyright 2019, LightStep Inc.
 
 /*
-Package varopt is an implementation of VarOpt, an unbiased weighted
+Package varopt contains an implementation of VarOpt, an unbiased weighted
 sampling algorithm described in the paper "Stream sampling for
 variance-optimal estimation of subset sums"
 https://arxiv.org/pdf/0803.0473.pdf (2008), by Edith Cohen, Nick
