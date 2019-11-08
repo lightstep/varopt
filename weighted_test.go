@@ -16,7 +16,7 @@ type packet struct {
 	protocol string
 }
 
-func ExampleWeighted() {
+func ExampleNew() {
 	const totalPackets = 1e6
 	const sampleRatio = 0.01
 

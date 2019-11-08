@@ -35,7 +35,7 @@ var colors = []curve{
 // While the number of expected points per second is uniform, the
 // output sample weights are expected to match the original
 // frequencies.
-func ExampleFrequency() {
+func ExampleVaropt_GetOriginalWeight() {
 	// Number of points.
 	const totalCount = 1e6
 

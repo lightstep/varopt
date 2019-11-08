@@ -3,6 +3,7 @@
 package varopt_test
 
 import (
+	"math/rand"
 	"testing"
 
 	"github.com/lightstep/varopt"
@@ -19,7 +20,9 @@ func TestSimple(t *testing.T) {
 		epsilon        = 0.01
 	)
 
-	ss := varopt.NewSimple(sampleSize)
+	rnd := rand.New(rand.NewSource(17167))
+
+	ss := varopt.NewSimple(sampleSize, rnd)
 
 	psum := 0.
 	for i := 0; i < popSize; i++ {

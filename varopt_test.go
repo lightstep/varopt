@@ -23,9 +23,7 @@ const (
 	sampleProb     = 0.001
 	sampleSize int = popSize * sampleProb
 
-	// TODO epsilon is somewhat variable b/c we're using the
-	// static rand w/o a fixed seed for the test.
-	epsilon = 0.06
+	epsilon = 0.08
 )
 
 func TestUnbiased(t *testing.T) {
@@ -108,7 +106,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 
 			for _, blockList := range blockLists {
 				for _, block := range blockList {
-					simple := varopt.NewSimple(sampleSize)
+					simple := varopt.NewSimple(sampleSize, rnd)
 
 					for _, s := range block {
 						simple.Add(s)

@@ -13,11 +13,13 @@ type Simple struct {
 	capacity int
 	observed int
 	buffer   []Sample
+	rnd      *rand.Rand
 }
 
-func NewSimple(capacity int) *Simple {
+func NewSimple(capacity int, rnd *rand.Rand) *Simple {
 	return &Simple{
 		capacity: capacity,
+		rnd:      rnd,
 	}
 }
 
@@ -34,7 +36,7 @@ func (s *Simple) Add(span Sample) {
 	}
 
 	// Give this a capacity/observed chance of replacing an existing entry.
-	index := rand.Intn(s.observed)
+	index := s.rnd.Intn(s.observed)
 	if index < s.capacity {
 		s.buffer[index] = span
 	}
