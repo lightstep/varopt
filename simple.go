@@ -13,14 +13,20 @@ type Simple struct {
 	capacity int
 	observed int
 	buffer   []Sample
+	rnd      *rand.Rand
 }
 
-func NewSimple(capacity int) *Simple {
+// NewSimple returns a simple reservoir sampler with given capacity
+// (i.e., reservoir size) and random number generator.
+func NewSimple(capacity int, rnd *rand.Rand) *Simple {
 	return &Simple{
 		capacity: capacity,
+		rnd:      rnd,
 	}
 }
 
+// Add considers a new observation for the sample.  Items have unit
+// weight.
 func (s *Simple) Add(span Sample) {
 	s.observed++
 
@@ -34,28 +40,29 @@ func (s *Simple) Add(span Sample) {
 	}
 
 	// Give this a capacity/observed chance of replacing an existing entry.
-	index := rand.Intn(s.observed)
+	index := s.rnd.Intn(s.observed)
 	if index < s.capacity {
 		s.buffer[index] = span
 	}
 }
 
+// Get returns the i'th selected item from the sample.
 func (s *Simple) Get(i int) Sample {
 	return s.buffer[i]
 }
 
+// Get returns the number of items in the sample.  If the reservoir is
+// full, Size() equals Capacity().
 func (s *Simple) Size() int {
 	return len(s.buffer)
 }
 
+// Weight returns the adjusted weight of each item in the sample.
 func (s *Simple) Weight() float64 {
 	return float64(s.observed) / float64(s.Size())
 }
 
-func (s *Simple) Prob() float64 {
-	return 1 / s.Weight()
-}
-
-func (s *Simple) Observed() int {
+// Count returns the number of items that were observed.
+func (s *Simple) Count() int {
 	return s.observed
 }
