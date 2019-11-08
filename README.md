@@ -4,7 +4,7 @@ estimation of subset sums](https://arxiv.org/pdf/0803.0473.pdf) (2008)
 by Edith Cohen, Nick Duffield, Haim Kaplan, Carsten Lund, and Mikkel
 Thorup.
 
-VarOpt is a reservoir-type sampler that maintains a fixed size sample
+VarOpt is a reservoir-type sampler that maintains a fixed-size sample
 and provides a mechanism for merging unequal-weight samples.
 
 This package also includes a simple reservoir sampling algorithm,

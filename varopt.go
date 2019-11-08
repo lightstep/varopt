@@ -42,13 +42,8 @@ type vsample struct {
 
 type largeHeap []vsample
 
-func NewVaropt(capacity int) *Varopt {
-	v := InitVaropt(capacity)
-	return &v
-}
-
-func InitVaropt(capacity int) Varopt {
-	return Varopt{
+func New(capacity int) *Varopt {
+	return &Varopt{
 		capacity: capacity,
 	}
 }

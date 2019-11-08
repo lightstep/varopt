@@ -102,7 +102,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 
 	func(allBlockLists ...[][][]varopt.Sample) {
 		for _, blockLists := range allBlockLists {
-			vsample := varopt.NewVaropt(sampleSize)
+			vsample := varopt.New(sampleSize)
 
 			for _, blockList := range blockLists {
 				for _, block := range blockList {
