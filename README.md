@@ -11,9 +11,9 @@ Thorup.
 VarOpt is a reservoir-type sampler that maintains a fixed-size sample
 and provides a mechanism for merging unequal-weight samples.
 
-This package also includes a simple reservoir sampling algorithm,
-often useful in conjunction with weighed reservoir sampling, using
-Algorithm R from [Random sampling with a
+This repository also includes a simple reservoir sampling algorithm,
+often useful in conjunction with weighed reservoir sampling, that
+implements Algorithm R from [Random sampling with a
 reservoir](https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R)
 (1985) by Jeffrey Vitter.
 
