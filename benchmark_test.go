@@ -1,4 +1,18 @@
 // Copyright 2019, LightStep Inc.
+//
+// The benchmark results point to a performance drop when the
+// largeHeap starts to be used because of interface conversions in and
+// out of the heap, primarily due to the heap interface.  This
+// suggests room for improvement by avoiding the built-in heap.
+
+/*
+BenchmarkAdd_Norm_100-8       	37540165	        32.1 ns/op	       8 B/op	       0 allocs/op
+BenchmarkAdd_Norm_10000-8     	39850280	        30.6 ns/op	       8 B/op	       0 allocs/op
+BenchmarkAdd_Norm_1000000-8   	 7958835	       183 ns/op	      52 B/op	       0 allocs/op
+BenchmarkAdd_Exp_100-8        	41565934	        28.5 ns/op	       8 B/op	       0 allocs/op
+BenchmarkAdd_Exp_10000-8      	43622184	        29.2 ns/op	       8 B/op	       0 allocs/op
+BenchmarkAdd_Exp_1000000-8    	 8103663	       220 ns/op	      55 B/op	       0 allocs/op
+*/
 
 package varopt_test
 
