@@ -21,12 +21,12 @@ reservoir](https://en.wikipedia.org/wiki/Reservoir_sampling#Algorithm_R)
 
 A typical use of VarOpt sampling is to estimate network flows using
 sample packets.  In this use-case, the weight applied to each sample
-is the size of the packet.  Beacuse VarOpt computes an unbiased
-sample, the sample data points can be summarized along secondary
-dimensions.  For example, we can select a subset of the sample
+is the size of the packet.  Because VarOpt computes an unbiased
+sample, sample data points can be summarized along secondary
+dimensions.  For example, we can select a subset of sampled packets
 according to a secondary attribute, sum the sample weights, and the
-result is expected value of the secondary attribute in the original
-population.
+result is expected to equal the size of packets corresponding to the
+secondary attribute from the original population.
 
 See [weighted_test.go](https://github.com/lightstep/varopt/blob/master/weighted_test.go) for an example.
 
@@ -42,10 +42,10 @@ maintaining frequency estimates.
 In this use-case, the weight assigned to each observation is the
 inverse probability of the bucket it belongs to.  The result of
 weighted sampling with inverse-probability weights is a uniform
-expectation, in this example we expect an equal number of observations
-falling into each bucket.  Each observation represents a frequency of
-its sample weight (computed by VarOpt) divided by its original weight
-(the inverse-probability).
+expectated value; in this example we expect an equal number of
+observations falling into each bucket.  Each observation represents a
+frequency of its sample weight (computed by VarOpt) divided by its
+original weight (the inverse-probability).
 
 See [frequency_test.go](https://github.com/lightstep/varopt/blob/master/frequency_test.go) for an example.
 
