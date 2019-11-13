@@ -5,6 +5,7 @@ package varopt
 import (
 	"container/heap"
 	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -64,8 +65,8 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 		weight: weight,
 	}
 
-	if weight <= 0 {
-		panic(fmt.Sprint("Invalid weight <= 0: ", weight))
+	if weight <= 0 || math.IsNaN(weight) {
+		panic(fmt.Sprint("Invalid weight: ", weight))
 	}
 
 	s.totalCount++
