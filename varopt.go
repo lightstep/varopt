@@ -4,6 +4,7 @@ package varopt
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 )
 
@@ -47,6 +48,8 @@ type vsample struct {
 
 type largeHeap []vsample
 
+var ErrInvalidWeight = fmt.Errorf("Negative, zero, or NaN weight")
+
 // New returns a new Varopt sampler with given capacity (i.e.,
 // reservoir size) and random number generator.
 func New(capacity int, rnd *rand.Rand) *Varopt {
@@ -57,14 +60,16 @@ func New(capacity int, rnd *rand.Rand) *Varopt {
 }
 
 // Add considers a new observation for the sample with given weight.
-func (s *Varopt) Add(sample Sample, weight float64) {
+//
+// An error will be returned if the weight is either negative or NaN.
+func (s *Varopt) Add(sample Sample, weight float64) error {
 	individual := vsample{
 		sample: sample,
 		weight: weight,
 	}
 
-	if weight <= 0 {
-		panic(fmt.Sprint("Invalid weight <= 0: ", weight))
+	if weight <= 0 || math.IsNaN(weight) {
+		return ErrInvalidWeight
 	}
 
 	s.totalCount++
@@ -72,7 +77,7 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 
 	if s.Size() < s.capacity {
 		s.L.push(individual)
-		return
+		return nil
 	}
 
 	// the X <- {} step from the paper is not done here,
@@ -114,6 +119,7 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 	}
 	s.T = append(s.T, s.X...)
 	s.X = s.X[:0]
+	return nil
 }
 
 func (s *Varopt) uniform() float64 {

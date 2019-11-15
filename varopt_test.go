@@ -147,3 +147,17 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 		[][][]varopt.Sample{smallBlocks, bigBlocks},
 	)
 }
+
+func TestInvalidWeight(t *testing.T) {
+	rnd := rand.New(rand.NewSource(98887))
+	v := varopt.New(1, rnd)
+
+	err := v.Add(nil, math.NaN())
+	require.Equal(t, err, varopt.ErrInvalidWeight)
+
+	err = v.Add(nil, -1)
+	require.Equal(t, err, varopt.ErrInvalidWeight)
+
+	err = v.Add(nil, 0)
+	require.Equal(t, err, varopt.ErrInvalidWeight)
+}
