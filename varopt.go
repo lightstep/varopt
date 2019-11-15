@@ -49,7 +49,7 @@ type vsample struct {
 
 type largeHeap []vsample
 
-var ErrInvalidWeight = fmt.Errorf("Negative or NaN weight")
+var ErrInvalidWeight = fmt.Errorf("Negative, zero, or NaN weight")
 
 // New returns a new Varopt sampler with given capacity (i.e.,
 // reservoir size) and random number generator.
