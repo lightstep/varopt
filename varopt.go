@@ -3,7 +3,6 @@
 package varopt
 
 import (
-	"container/heap"
 	"fmt"
 	"math/rand"
 )
@@ -17,7 +16,7 @@ type Varopt struct {
 	// Random number generator
 	rnd *rand.Rand
 
-	// Large-weight items
+	// Large-weight items stored in a min-heap.
 	L largeHeap
 
 	// Light-weight items.
@@ -72,7 +71,7 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 	s.totalWeight += weight
 
 	if s.Size() < s.capacity {
-		heap.Push(&s.L, individual)
+		s.L.push(individual)
 		return
 	}
 
@@ -82,14 +81,14 @@ func (s *Varopt) Add(sample Sample, weight float64) {
 	W := s.tau * float64(len(s.T))
 
 	if weight > s.tau {
-		heap.Push(&s.L, individual)
+		s.L.push(individual)
 	} else {
 		s.X = append(s.X, individual)
 		W += weight
 	}
 
 	for len(s.L) > 0 && W >= float64(len(s.T)+len(s.X)-1)*s.L[0].weight {
-		h := heap.Pop(&s.L).(vsample)
+		h := s.L.pop()
 		s.X = append(s.X, h)
 		W += h.weight
 	}
@@ -177,26 +176,49 @@ func (s *Varopt) Tau() float64 {
 	return s.tau
 }
 
-func (b largeHeap) Len() int {
-	return len(b)
+func (lp *largeHeap) push(v vsample) {
+	l := append(*lp, v)
+	n := len(l) - 1
+
+	// This copies the body of heap.up().
+	j := n
+	for {
+		i := (j - 1) / 2 // parent
+		if i == j || l[j].weight >= l[i].weight {
+			break
+		}
+		l[i], l[j] = l[j], l[i]
+		j = i
+	}
+
+	*lp = l
 }
 
-func (b largeHeap) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
-}
+func (lp *largeHeap) pop() vsample {
+	l := *lp
+	n := len(l) - 1
+	result := l[0]
+	l[0] = l[n]
+	l = l[:n]
 
-func (b largeHeap) Less(i, j int) bool {
-	return b[i].weight < b[j].weight
-}
+	// This copies the body of heap.down().
+	i := 0
+	for {
+		j1 := 2*i + 1
+		if j1 >= n || j1 < 0 { // j1 < 0 after int overflow
+			break
+		}
+		j := j1 // left child
+		if j2 := j1 + 1; j2 < n && l[j2].weight < l[j1].weight {
+			j = j2 // = 2*i + 2  // right child
+		}
+		if l[j].weight >= l[i].weight {
+			break
+		}
+		l[i], l[j] = l[j], l[i]
+		i = j
+	}
 
-func (b *largeHeap) Push(x interface{}) {
-	*b = append(*b, x.(vsample))
-}
-
-func (b *largeHeap) Pop() interface{} {
-	old := *b
-	n := len(old)
-	x := old[n-1]
-	*b = old[0 : n-1]
-	return x
+	*lp = l
+	return result
 }
