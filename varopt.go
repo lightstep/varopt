@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+
+	"github.com/lightstep/varopt/internal"
 )
 
 // Varopt implements the algorithm from Stream sampling for
@@ -18,13 +20,13 @@ type Varopt struct {
 	rnd *rand.Rand
 
 	// Large-weight items stored in a min-heap.
-	L largeHeap
+	L internal.SampleHeap
 
 	// Light-weight items.
-	T []vsample
+	T []internal.Vsample
 
 	// Temporary buffer.
-	X []vsample
+	X []internal.Vsample
 
 	// Current threshold
 	tau float64
@@ -41,13 +43,6 @@ type Varopt struct {
 // passed in separately.
 type Sample interface{}
 
-type vsample struct {
-	sample Sample
-	weight float64
-}
-
-type largeHeap []vsample
-
 var ErrInvalidWeight = fmt.Errorf("Negative, zero, or NaN weight")
 
 // New returns a new Varopt sampler with given capacity (i.e.,
@@ -63,9 +58,9 @@ func New(capacity int, rnd *rand.Rand) *Varopt {
 //
 // An error will be returned if the weight is either negative or NaN.
 func (s *Varopt) Add(sample Sample, weight float64) error {
-	individual := vsample{
-		sample: sample,
-		weight: weight,
+	individual := internal.Vsample{
+		Sample: sample,
+		Weight: weight,
 	}
 
 	if weight <= 0 || math.IsNaN(weight) {
@@ -76,7 +71,7 @@ func (s *Varopt) Add(sample Sample, weight float64) error {
 	s.totalWeight += weight
 
 	if s.Size() < s.capacity {
-		s.L.push(individual)
+		s.L.Push(individual)
 		return nil
 	}
 
@@ -86,16 +81,16 @@ func (s *Varopt) Add(sample Sample, weight float64) error {
 	W := s.tau * float64(len(s.T))
 
 	if weight > s.tau {
-		s.L.push(individual)
+		s.L.Push(individual)
 	} else {
 		s.X = append(s.X, individual)
 		W += weight
 	}
 
-	for len(s.L) > 0 && W >= float64(len(s.T)+len(s.X)-1)*s.L[0].weight {
-		h := s.L.pop()
+	for len(s.L) > 0 && W >= float64(len(s.T)+len(s.X)-1)*s.L[0].Weight {
+		h := s.L.Pop()
 		s.X = append(s.X, h)
-		W += h.weight
+		W += h.Weight
 	}
 
 	s.tau = W / float64(len(s.T)+len(s.X)-1)
@@ -103,7 +98,7 @@ func (s *Varopt) Add(sample Sample, weight float64) error {
 	d := 0
 
 	for d < len(s.X) && r >= 0 {
-		wxd := s.X[d].weight
+		wxd := s.X[d].Weight
 		r -= (1 - wxd/s.tau)
 		d++
 	}
@@ -136,10 +131,10 @@ func (s *Varopt) uniform() float64 {
 // GetOriginalWeight(i).
 func (s *Varopt) Get(i int) (Sample, float64) {
 	if i < len(s.L) {
-		return s.L[i].sample, s.L[i].weight
+		return s.L[i].Sample, s.L[i].Weight
 	}
 
-	return s.T[i-len(s.L)].sample, s.tau
+	return s.T[i-len(s.L)].Sample, s.tau
 }
 
 // GetOriginalWeight returns the original input weight of the sample
@@ -147,10 +142,10 @@ func (s *Varopt) Get(i int) (Sample, float64) {
 // frequency from the adjusted sample weight.
 func (s *Varopt) GetOriginalWeight(i int) float64 {
 	if i < len(s.L) {
-		return s.L[i].weight
+		return s.L[i].Weight
 	}
 
-	return s.T[i-len(s.L)].weight
+	return s.T[i-len(s.L)].Weight
 }
 
 // Capacity returns the size of the reservoir.  This is the maximum
@@ -180,51 +175,4 @@ func (s *Varopt) TotalCount() int {
 // paper for details.
 func (s *Varopt) Tau() float64 {
 	return s.tau
-}
-
-func (lp *largeHeap) push(v vsample) {
-	l := append(*lp, v)
-	n := len(l) - 1
-
-	// This copies the body of heap.up().
-	j := n
-	for {
-		i := (j - 1) / 2 // parent
-		if i == j || l[j].weight >= l[i].weight {
-			break
-		}
-		l[i], l[j] = l[j], l[i]
-		j = i
-	}
-
-	*lp = l
-}
-
-func (lp *largeHeap) pop() vsample {
-	l := *lp
-	n := len(l) - 1
-	result := l[0]
-	l[0] = l[n]
-	l = l[:n]
-
-	// This copies the body of heap.down().
-	i := 0
-	for {
-		j1 := 2*i + 1
-		if j1 >= n || j1 < 0 { // j1 < 0 after int overflow
-			break
-		}
-		j := j1 // left child
-		if j2 := j1 + 1; j2 < n && l[j2].weight < l[j1].weight {
-			j = j2 // = 2*i + 2  // right child
-		}
-		if l[j].weight >= l[i].weight {
-			break
-		}
-		l[i], l[j] = l[j], l[i]
-		i = j
-	}
-
-	*lp = l
-	return result
 }
