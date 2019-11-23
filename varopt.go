@@ -54,6 +54,17 @@ func New(capacity int, rnd *rand.Rand) *Varopt {
 	}
 }
 
+// Reset returns the sampler to its initial state, maintaining its
+// capacity and random number source.
+func (s *Varopt) Reset() {
+	s.L = s.L[:0]
+	s.T = s.T[:0]
+	s.X = s.X[:0]
+	s.tau = 0
+	s.totalCount = 0
+	s.totalWeight = 0
+}
+
 // Add considers a new observation for the sample with given weight.
 //
 // An error will be returned if the weight is either negative or NaN.

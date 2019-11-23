@@ -161,3 +161,28 @@ func TestInvalidWeight(t *testing.T) {
 	err = v.Add(nil, 0)
 	require.Equal(t, err, varopt.ErrInvalidWeight)
 }
+
+func TestReset(t *testing.T) {
+	const capacity = 10
+	const insert = 100
+	rnd := rand.New(rand.NewSource(98887))
+	v := varopt.New(capacity, rnd)
+
+	sum := 0.
+	for i := 1.; i <= insert; i++ {
+		v.Add(nil, i)
+		sum += i
+	}
+
+	require.Equal(t, capacity, v.Size())
+	require.Equal(t, insert, v.TotalCount())
+	require.Equal(t, sum, v.TotalWeight())
+	require.Less(t, 0., v.Tau())
+
+	v.Reset()
+
+	require.Equal(t, 0, v.Size())
+	require.Equal(t, 0, v.TotalCount())
+	require.Equal(t, 0., v.TotalWeight())
+	require.Equal(t, 0., v.Tau())
+}
