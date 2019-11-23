@@ -66,16 +66,18 @@ func (s *Varopt) Reset() {
 }
 
 // Add considers a new observation for the sample with given weight.
+// If there is an item ejected from the same as a result, the item is
+// returned.
 //
 // An error will be returned if the weight is either negative or NaN.
-func (s *Varopt) Add(sample Sample, weight float64) error {
+func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
 	individual := internal.Vsample{
 		Sample: sample,
 		Weight: weight,
 	}
 
 	if weight <= 0 || math.IsNaN(weight) {
-		return ErrInvalidWeight
+		return nil, ErrInvalidWeight
 	}
 
 	s.totalCount++
@@ -83,7 +85,7 @@ func (s *Varopt) Add(sample Sample, weight float64) error {
 
 	if s.Size() < s.capacity {
 		s.L.Push(individual)
-		return nil
+		return nil, nil
 	}
 
 	// the X <- {} step from the paper is not done here,
@@ -113,19 +115,22 @@ func (s *Varopt) Add(sample Sample, weight float64) error {
 		r -= (1 - wxd/s.tau)
 		d++
 	}
+	var eject Sample
 	if r < 0 {
 		if d < len(s.X) {
 			s.X[d], s.X[len(s.X)-1] = s.X[len(s.X)-1], s.X[d]
 		}
+		eject = s.X[len(s.X)-1].Sample
 		s.X = s.X[:len(s.X)-1]
 	} else {
 		ti := s.rnd.Intn(len(s.T))
 		s.T[ti], s.T[len(s.T)-1] = s.T[len(s.T)-1], s.T[ti]
+		eject = s.T[len(s.T)-1].Sample
 		s.T = s.T[:len(s.T)-1]
 	}
 	s.T = append(s.T, s.X...)
 	s.X = s.X[:0]
-	return nil
+	return eject, nil
 }
 
 func (s *Varopt) uniform() float64 {
