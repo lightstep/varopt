@@ -152,12 +152,89 @@ func TestInvalidWeight(t *testing.T) {
 	rnd := rand.New(rand.NewSource(98887))
 	v := varopt.New(1, rnd)
 
-	err := v.Add(nil, math.NaN())
+	_, err := v.Add(nil, math.NaN())
 	require.Equal(t, err, varopt.ErrInvalidWeight)
 
-	err = v.Add(nil, -1)
+	_, err = v.Add(nil, -1)
 	require.Equal(t, err, varopt.ErrInvalidWeight)
 
-	err = v.Add(nil, 0)
+	_, err = v.Add(nil, 0)
 	require.Equal(t, err, varopt.ErrInvalidWeight)
+}
+
+func TestReset(t *testing.T) {
+	const capacity = 10
+	const insert = 100
+	rnd := rand.New(rand.NewSource(98887))
+	v := varopt.New(capacity, rnd)
+
+	sum := 0.
+	for i := 1.; i <= insert; i++ {
+		v.Add(nil, i)
+		sum += i
+	}
+
+	require.Equal(t, capacity, v.Size())
+	require.Equal(t, insert, v.TotalCount())
+	require.Equal(t, sum, v.TotalWeight())
+	require.Less(t, 0., v.Tau())
+
+	v.Reset()
+
+	require.Equal(t, 0, v.Size())
+	require.Equal(t, 0, v.TotalCount())
+	require.Equal(t, 0., v.TotalWeight())
+	require.Equal(t, 0., v.Tau())
+}
+
+func TestEject(t *testing.T) {
+	const capacity = 100
+	const rounds = 10000
+	const maxvalue = 10000
+
+	entries := make([]int, capacity+1)
+	freelist := make([]*int, capacity+1)
+
+	for i := range entries {
+		freelist[i] = &entries[i]
+	}
+
+	// Make two deterministically equal samplers
+	rnd1 := rand.New(rand.NewSource(98887))
+	rnd2 := rand.New(rand.NewSource(98887))
+	vsrc := rand.New(rand.NewSource(98887))
+
+	expected := varopt.New(capacity, rnd1)
+	ejector := varopt.New(capacity, rnd2)
+
+	for i := 0; i < rounds; i++ {
+		value := vsrc.Intn(maxvalue)
+		weight := vsrc.ExpFloat64()
+
+		_, _ = expected.Add(&value, weight)
+
+		lastitem := len(freelist) - 1
+		item := freelist[lastitem]
+		freelist = freelist[:lastitem]
+
+		*item = value
+		eject, _ := ejector.Add(item, weight)
+
+		if eject != nil {
+			freelist = append(freelist, eject.(*int))
+		}
+	}
+
+	require.Equal(t, expected.Size(), ejector.Size())
+	require.Equal(t, expected.TotalCount(), ejector.TotalCount())
+	require.Equal(t, expected.TotalWeight(), ejector.TotalWeight())
+	require.Equal(t, expected.Tau(), ejector.Tau())
+
+	for i := 0; i < capacity; i++ {
+		expectItem, expectWeight := expected.Get(i)
+		ejectItem, ejectWeight := expected.Get(i)
+
+		require.Equal(t, *expectItem.(*int), *ejectItem.(*int))
+		require.Equal(t, expectWeight, ejectWeight)
+	}
 }
