@@ -66,8 +66,8 @@ func (s *Varopt) Reset() {
 }
 
 // Add considers a new observation for the sample with given weight.
-// If there is an item ejected from the same as a result, the item is
-// returned.
+// If there is an item ejected from the sample as a result, the item
+// is returned to allow re-use of memory.
 //
 // An error will be returned if the weight is either negative or NaN.
 func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
