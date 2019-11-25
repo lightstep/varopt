@@ -51,6 +51,8 @@ func New(capacity int, rnd *rand.Rand) *Varopt {
 	return &Varopt{
 		capacity: capacity,
 		rnd:      rnd,
+		L:        make(internal.SampleHeap, 0, capacity),
+		T:        make(internal.SampleHeap, 0, capacity),
 	}
 }
 
