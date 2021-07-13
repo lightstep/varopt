@@ -6,11 +6,6 @@ jobs:
     docker:
       - image: circleci/golang:1.15
     steps:
-      - run:
-          name: "configure environment"
-          command: |
-            echo 'export GOPATH="$HOME/go"' >> $BASH_ENV
-            source $BASH_ENV
       - checkout
       - run: go test -v ./...
 
