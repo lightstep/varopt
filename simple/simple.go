@@ -53,15 +53,10 @@ func (s *Simple) Get(i int) varopt.Sample {
 	return s.buffer[i]
 }
 
-// Get returns the number of items in the sample.  If the reservoir is
+// Size returns the number of items in the sample.  If the reservoir is
 // full, Size() equals Capacity().
 func (s *Simple) Size() int {
 	return len(s.buffer)
-}
-
-// Weight returns the adjusted weight of each item in the sample.
-func (s *Simple) Weight() float64 {
-	return float64(s.observed) / float64(s.Size())
 }
 
 // Count returns the number of items that were observed.
