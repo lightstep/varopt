@@ -43,7 +43,7 @@ type Varopt struct {
 // passed in separately.
 type Sample interface{}
 
-var ErrInvalidWeight = fmt.Errorf("Negative, zero, or NaN weight")
+var ErrInvalidWeight = fmt.Errorf("Negative, Zero, Inf or NaN weight")
 
 // New returns a new Varopt sampler with given capacity (i.e.,
 // reservoir size) and random number generator.
@@ -78,7 +78,7 @@ func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
 		Weight: weight,
 	}
 
-	if weight <= 0 || math.IsNaN(weight) {
+	if weight <= 0 || math.IsNaN(weight) || math.IsInf(weight, 1) {
 		return nil, ErrInvalidWeight
 	}
 
