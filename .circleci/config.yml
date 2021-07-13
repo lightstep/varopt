@@ -4,7 +4,7 @@ jobs:
   test:
     working_directory: ~/go/src/github.com/lightstep/varopt
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.15
     steps:
       - run:
           name: "configure environment"
