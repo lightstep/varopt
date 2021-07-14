@@ -113,7 +113,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 						ss.Add(s)
 					}
 
-					weight := ss.Weight()
+					weight := float64(ss.Count()) / float64(ss.Size())
 					for i := 0; i < ss.Size(); i++ {
 						vsample.Add(ss.Get(i), weight)
 					}
