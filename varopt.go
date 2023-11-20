@@ -15,18 +15,18 @@ import (
 // Duffield, Haim Kaplan, Carsten Lund, Mikkel Thorup 2008
 //
 // https://arxiv.org/pdf/0803.0473.pdf
-type Varopt struct {
+type Varopt[T any] struct {
 	// Random number generator
 	rnd *rand.Rand
 
 	// Large-weight items stored in a min-heap.
-	L internal.SampleHeap
+	L internal.SampleHeap[T]
 
 	// Light-weight items.
-	T []internal.Vsample
+	T []internal.Vsample[T]
 
 	// Temporary buffer.
-	X []internal.Vsample
+	X []internal.Vsample[T]
 
 	// Current threshold
 	tau float64
@@ -38,27 +38,28 @@ type Varopt struct {
 	totalWeight float64
 }
 
-// Sample is an empty interface that represents a sample item.
-// Sampling algorithms treat these as opaque, as their weight is
-// passed in separately.
-type Sample interface{}
-
 var ErrInvalidWeight = fmt.Errorf("Negative, Zero, Inf or NaN weight")
 
 // New returns a new Varopt sampler with given capacity (i.e.,
 // reservoir size) and random number generator.
-func New(capacity int, rnd *rand.Rand) *Varopt {
-	return &Varopt{
+func New[T any](capacity int, rnd *rand.Rand) *Varopt[T] {
+	v := &Varopt[T]{}
+	v.Init(capacity, rnd)
+	return v
+}
+
+func (v *Varopt[T]) Init(capacity int, rnd *rand.Rand) {
+	*v = Varopt[T]{
 		capacity: capacity,
 		rnd:      rnd,
-		L:        make(internal.SampleHeap, 0, capacity),
-		T:        make(internal.SampleHeap, 0, capacity),
+		L:        make(internal.SampleHeap[T], 0, capacity),
+		T:        make(internal.SampleHeap[T], 0, capacity),
 	}
 }
 
 // Reset returns the sampler to its initial state, maintaining its
 // capacity and random number source.
-func (s *Varopt) Reset() {
+func (s *Varopt[T]) Reset() {
 	s.L = s.L[:0]
 	s.T = s.T[:0]
 	s.X = s.X[:0]
@@ -72,14 +73,15 @@ func (s *Varopt) Reset() {
 // is returned to allow re-use of memory.
 //
 // An error will be returned if the weight is either negative or NaN.
-func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
-	individual := internal.Vsample{
-		Sample: sample,
+func (s *Varopt[T]) Add(item T, weight float64) (T, error) {
+	var zero T
+	individual := internal.Vsample[T]{
+		Sample: item,
 		Weight: weight,
 	}
 
 	if weight <= 0 || math.IsNaN(weight) || math.IsInf(weight, 1) {
-		return nil, ErrInvalidWeight
+		return zero, ErrInvalidWeight
 	}
 
 	s.totalCount++
@@ -87,7 +89,7 @@ func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
 
 	if s.Size() < s.capacity {
 		s.L.Push(individual)
-		return nil, nil
+		return zero, nil
 	}
 
 	// the X <- {} step from the paper is not done here,
@@ -117,7 +119,7 @@ func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
 		r -= (1 - wxd/s.tau)
 		d++
 	}
-	var eject Sample
+	var eject T
 	if r < 0 {
 		if d < len(s.X) {
 			s.X[d], s.X[len(s.X)-1] = s.X[len(s.X)-1], s.X[d]
@@ -135,7 +137,7 @@ func (s *Varopt) Add(sample Sample, weight float64) (Sample, error) {
 	return eject, nil
 }
 
-func (s *Varopt) uniform() float64 {
+func (s *Varopt[T]) uniform() float64 {
 	for {
 		r := s.rnd.Float64()
 		if r != 0.0 {
@@ -147,7 +149,7 @@ func (s *Varopt) uniform() float64 {
 // Get() returns the i'th sample and its adjusted weight. To obtain
 // the sample's original weight (i.e. what was passed to Add), use
 // GetOriginalWeight(i).
-func (s *Varopt) Get(i int) (Sample, float64) {
+func (s *Varopt[T]) Get(i int) (T, float64) {
 	if i < len(s.L) {
 		return s.L[i].Sample, s.L[i].Weight
 	}
@@ -158,7 +160,7 @@ func (s *Varopt) Get(i int) (Sample, float64) {
 // GetOriginalWeight returns the original input weight of the sample
 // item that was passed to Add().  This can be useful for computing a
 // frequency from the adjusted sample weight.
-func (s *Varopt) GetOriginalWeight(i int) float64 {
+func (s *Varopt[T]) GetOriginalWeight(i int) float64 {
 	if i < len(s.L) {
 		return s.L[i].Weight
 	}
@@ -168,29 +170,29 @@ func (s *Varopt) GetOriginalWeight(i int) float64 {
 
 // Capacity returns the size of the reservoir.  This is the maximum
 // size of the sample.
-func (s *Varopt) Capacity() int {
+func (s *Varopt[T]) Capacity() int {
 	return s.capacity
 }
 
 // Size returns the current number of items in the sample.  If the
 // reservoir is full, this returns Capacity().
-func (s *Varopt) Size() int {
+func (s *Varopt[T]) Size() int {
 	return len(s.L) + len(s.T)
 }
 
 // TotalWeight returns the sum of weights that were passed to Add().
-func (s *Varopt) TotalWeight() float64 {
+func (s *Varopt[T]) TotalWeight() float64 {
 	return s.totalWeight
 }
 
 // TotalCount returns the number of calls to Add().
-func (s *Varopt) TotalCount() int {
+func (s *Varopt[T]) TotalCount() int {
 	return s.totalCount
 }
 
 // Tau returns the current large-weight threshold.  Weights larger
 // than Tau() carry their exact weight in the sample.  See the VarOpt
 // paper for details.
-func (s *Varopt) Tau() float64 {
+func (s *Varopt[T]) Tau() float64 {
 	return s.tau
 }

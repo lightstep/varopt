@@ -2,14 +2,14 @@
 
 package internal
 
-type Vsample struct {
-	Sample interface{}
+type Vsample[T any] struct {
+	Sample T
 	Weight float64
 }
 
-type SampleHeap []Vsample
+type SampleHeap[T any] []Vsample[T]
 
-func (sh *SampleHeap) Push(v Vsample) {
+func (sh *SampleHeap[T]) Push(v Vsample[T]) {
 	l := append(*sh, v)
 	n := len(l) - 1
 
@@ -27,7 +27,7 @@ func (sh *SampleHeap) Push(v Vsample) {
 	*sh = l
 }
 
-func (sh *SampleHeap) Pop() Vsample {
+func (sh *SampleHeap[T]) Pop() Vsample[T] {
 	l := *sh
 	n := len(l) - 1
 	result := l[0]

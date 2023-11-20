@@ -27,6 +27,8 @@ const (
 	epsilon = 0.08
 )
 
+type testInt int
+
 func TestUnbiased(t *testing.T) {
 	var (
 		// Ratio of big blocks to small blocks
@@ -55,12 +57,12 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 		extra = popSize - bigSize*numBig - smallSize*numSmall
 	)
 
-	population := make([]varopt.Sample, popSize)
+	population := make([]testInt, popSize)
 
 	psum := 0.0
 
 	for i := range population {
-		population[i] = i
+		population[i] = testInt(i)
 		psum += float64(i)
 	}
 
@@ -69,17 +71,17 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 	// 	population[i], population[j] = population[j], population[i]
 	// })
 
-	smallBlocks := make([][]varopt.Sample, numSmall)
-	bigBlocks := make([][]varopt.Sample, numBig)
+	smallBlocks := make([][]testInt, numSmall)
+	bigBlocks := make([][]testInt, numBig)
 
 	for i := 0; i < numSmall; i++ {
-		smallBlocks[i] = make([]varopt.Sample, smallSize)
+		smallBlocks[i] = make([]testInt, smallSize)
 	}
 	for i := 0; i < numBig; i++ {
 		if i == 0 {
-			bigBlocks[0] = make([]varopt.Sample, bigSize+extra)
+			bigBlocks[0] = make([]testInt, bigSize+extra)
 		} else {
-			bigBlocks[i] = make([]varopt.Sample, bigSize)
+			bigBlocks[i] = make([]testInt, bigSize)
 		}
 	}
 
@@ -101,13 +103,13 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 	maxDiff := 0.0
 	rnd := rand.New(rand.NewSource(98887))
 
-	func(allBlockLists ...[][][]varopt.Sample) {
+	func(allBlockLists ...[][][]testInt) {
 		for _, blockLists := range allBlockLists {
-			vsample := varopt.New(sampleSize, rnd)
+			vsample := varopt.New[testInt](sampleSize, rnd)
 
 			for _, blockList := range blockLists {
 				for _, block := range blockList {
-					ss := simple.New(sampleSize, rnd)
+					ss := simple.New[testInt](sampleSize, rnd)
 
 					for _, s := range block {
 						ss.Add(s)
@@ -126,7 +128,7 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 
 			for i := 0; i < vsample.Size(); i++ {
 				v, w := vsample.Get(i)
-				vi := v.(int)
+				vi := int(v)
 				if vi%2 == 0 {
 					even++
 				} else {
@@ -143,22 +145,22 @@ func testUnbiased(t *testing.T, bbr, bsr float64) {
 			require.InEpsilon(t, odd, even, epsilon)
 		}
 	}(
-		[][][]varopt.Sample{bigBlocks, smallBlocks},
-		[][][]varopt.Sample{smallBlocks, bigBlocks},
+		[][][]testInt{bigBlocks, smallBlocks},
+		[][][]testInt{smallBlocks, bigBlocks},
 	)
 }
 
 func TestInvalidWeight(t *testing.T) {
 	rnd := rand.New(rand.NewSource(98887))
-	v := varopt.New(1, rnd)
+	v := varopt.New[testInt](1, rnd)
 
-	_, err := v.Add(nil, math.NaN())
+	_, err := v.Add(1, math.NaN())
 	require.Equal(t, err, varopt.ErrInvalidWeight)
 
-	_, err = v.Add(nil, -1)
+	_, err = v.Add(1, -1)
 	require.Equal(t, err, varopt.ErrInvalidWeight)
 
-	_, err = v.Add(nil, 0)
+	_, err = v.Add(1, 0)
 	require.Equal(t, err, varopt.ErrInvalidWeight)
 }
 
@@ -166,11 +168,11 @@ func TestReset(t *testing.T) {
 	const capacity = 10
 	const insert = 100
 	rnd := rand.New(rand.NewSource(98887))
-	v := varopt.New(capacity, rnd)
+	v := varopt.New[testInt](capacity, rnd)
 
 	sum := 0.
 	for i := 1.; i <= insert; i++ {
-		v.Add(nil, i)
+		v.Add(testInt(i), i)
 		sum += i
 	}
 
@@ -192,8 +194,8 @@ func TestEject(t *testing.T) {
 	const rounds = 10000
 	const maxvalue = 10000
 
-	entries := make([]int, capacity+1)
-	freelist := make([]*int, capacity+1)
+	entries := make([]testInt, capacity+1)
+	freelist := make([]*testInt, capacity+1)
 
 	for i := range entries {
 		freelist[i] = &entries[i]
@@ -204,11 +206,11 @@ func TestEject(t *testing.T) {
 	rnd2 := rand.New(rand.NewSource(98887))
 	vsrc := rand.New(rand.NewSource(98887))
 
-	expected := varopt.New(capacity, rnd1)
-	ejector := varopt.New(capacity, rnd2)
+	expected := varopt.New[*testInt](capacity, rnd1)
+	ejector := varopt.New[*testInt](capacity, rnd2)
 
 	for i := 0; i < rounds; i++ {
-		value := vsrc.Intn(maxvalue)
+		value := testInt(vsrc.Intn(maxvalue))
 		weight := vsrc.ExpFloat64()
 
 		_, _ = expected.Add(&value, weight)
@@ -221,7 +223,7 @@ func TestEject(t *testing.T) {
 		eject, _ := ejector.Add(item, weight)
 
 		if eject != nil {
-			freelist = append(freelist, eject.(*int))
+			freelist = append(freelist, eject)
 		}
 	}
 
@@ -234,7 +236,7 @@ func TestEject(t *testing.T) {
 		expectItem, expectWeight := expected.Get(i)
 		ejectItem, ejectWeight := expected.Get(i)
 
-		require.Equal(t, *expectItem.(*int), *ejectItem.(*int))
+		require.Equal(t, *expectItem, *ejectItem)
 		require.Equal(t, expectWeight, ejectWeight)
 	}
 }
