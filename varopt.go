@@ -48,6 +48,8 @@ func New[T any](capacity int, rnd *rand.Rand) *Varopt[T] {
 	return v
 }
 
+// Init initializes a Varopt[T] in-place, avoiding an allocation
+// compared with New().
 func (v *Varopt[T]) Init(capacity int, rnd *rand.Rand) {
 	*v = Varopt[T]{
 		capacity: capacity,
@@ -66,6 +68,22 @@ func (s *Varopt[T]) Reset() {
 	s.tau = 0
 	s.totalCount = 0
 	s.totalWeight = 0
+}
+
+// CopyFrom copies the fields of `from` into this Varopt[T].
+func (s *Varopt[T]) CopyFrom(from *Varopt[T]) {
+	// Copy non-slice fields
+	cpy := *from
+	// Keep existing slices, reset
+	cpy.L = s.L[:0]
+	cpy.T = s.T[:0]
+	cpy.X = s.X[:0]
+	// Append to existing slices
+	cpy.L = append(cpy.L, from.L...)
+	cpy.T = append(cpy.T, from.T...)
+	cpy.X = append(cpy.X, from.X...)
+	// Assign back to `s`
+	*s = cpy
 }
 
 // Add considers a new observation for the sample with given weight.

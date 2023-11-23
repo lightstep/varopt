@@ -181,12 +181,35 @@ func TestReset(t *testing.T) {
 	require.Equal(t, sum, v.TotalWeight())
 	require.Less(t, 0., v.Tau())
 
+	var v2 varopt.Varopt[testInt]
+	v2.Init(capacity, rnd)
+	v2.CopyFrom(v)
+
+	var expect []testInt
+	for i := 0; i < v.Size(); i++ {
+		got, _ := v.Get(i)
+		expect = append(expect, got)
+	}
+
 	v.Reset()
 
 	require.Equal(t, 0, v.Size())
 	require.Equal(t, 0, v.TotalCount())
 	require.Equal(t, 0., v.TotalWeight())
 	require.Equal(t, 0., v.Tau())
+
+	require.Equal(t, capacity, v2.Size())
+	require.Equal(t, insert, v2.TotalCount())
+	require.Equal(t, sum, v2.TotalWeight())
+	require.Less(t, 0., v2.Tau())
+
+	var have []testInt
+	for i := 0; i < v2.Size(); i++ {
+		got, _ := v2.Get(i)
+		have = append(have, got)
+	}
+	require.Equal(t, expect, have)
+
 }
 
 func TestEject(t *testing.T) {
