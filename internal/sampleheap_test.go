@@ -38,17 +38,20 @@ func (s *simpleHeap) Pop() interface{} {
 }
 
 func TestLargeHeap(t *testing.T) {
-	var L internal.SampleHeap
+	var L internal.SampleHeap[float64]
 	var S simpleHeap
 
 	for i := 0; i < 1e6; i++ {
 		v := rand.NormFloat64()
-		L.Push(internal.Vsample{Weight: v})
+		L.Push(internal.Vsample[float64]{
+			Sample: v,
+			Weight: v,
+		})
 		heap.Push(&S, v)
 	}
 
 	for len(S) > 0 {
-		v1 := heap.Pop(&S).(float64)
+		v1 := heap.Pop(&S)
 		v2 := L.Pop().Weight
 
 		require.Equal(t, v1, v2)

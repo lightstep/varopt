@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type iRec int
-
 func TestSimple(t *testing.T) {
 	const (
 		popSize        = 1e6
@@ -22,11 +20,11 @@ func TestSimple(t *testing.T) {
 
 	rnd := rand.New(rand.NewSource(17167))
 
-	ss := simple.New(sampleSize, rnd)
+	ss := simple.New[int](sampleSize, rnd)
 
 	psum := 0.
 	for i := 0; i < popSize; i++ {
-		ss.Add(iRec(i))
+		ss.Add(i)
 		psum += float64(i)
 	}
 
@@ -34,7 +32,7 @@ func TestSimple(t *testing.T) {
 
 	ssum := 0.0
 	for i := 0; i < sampleSize; i++ {
-		ssum += float64(ss.Get(i).(iRec))
+		ssum += float64(ss.Get(i))
 	}
 
 	require.InEpsilon(t, ssum/float64(ss.Size()), psum/popSize, epsilon)

@@ -56,10 +56,12 @@ func BenchmarkAdd_Exp_1000000(b *testing.B) {
 	benchmarkAdd(b, 1000000, expValue)
 }
 
+type thing struct{}
+
 func benchmarkAdd(b *testing.B, size int, f func(rnd *rand.Rand) float64) {
 	b.ReportAllocs()
 	rnd := rand.New(rand.NewSource(3331))
-	v := varopt.New(size, rnd)
+	v := varopt.New[thing](size, rnd)
 	weights := make([]float64, b.N)
 	for i := 0; i < b.N; i++ {
 		weights[i] = f(rnd)
@@ -67,6 +69,6 @@ func benchmarkAdd(b *testing.B, size int, f func(rnd *rand.Rand) float64) {
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		v.Add(nil, weights[i])
+		v.Add(thing{}, weights[i])
 	}
 }

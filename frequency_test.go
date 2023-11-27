@@ -16,7 +16,7 @@ type curve struct {
 	stddev float64
 }
 
-type point struct {
+type testPoint struct {
 	color  int
 	xvalue float64
 }
@@ -47,7 +47,7 @@ func ExampleVaropt_GetOriginalWeight() {
 
 	// Construct a timeseries consisting of three colored signals,
 	// for x=0 to x=60 seconds.
-	var points []point
+	var points []testPoint
 
 	// origCounts stores the original signals at second granularity.
 	origCounts := make([][]int, len(colors))
@@ -66,7 +66,7 @@ func ExampleVaropt_GetOriginalWeight() {
 			continue
 		}
 		origCounts[choose][int(math.Floor(xvalue))]++
-		points = append(points, point{
+		points = append(points, testPoint{
 			color:  choose,
 			xvalue: xvalue,
 		})
@@ -83,7 +83,7 @@ func ExampleVaropt_GetOriginalWeight() {
 	// weight.  This ensures a uniform distribution of points in each
 	// second.
 	sampleSize := int(sampleRatio * float64(totalCount))
-	sampler := varopt.New(sampleSize, rnd)
+	sampler := varopt.New[testPoint](sampleSize, rnd)
 	for _, point := range points {
 		second := int(math.Floor(point.xvalue))
 		prob := float64(xcount[second]) / float64(totalCount)
@@ -103,9 +103,8 @@ func ExampleVaropt_GetOriginalWeight() {
 	// The effective count of each sample point is its output
 	// weight divided by its original weight.
 	for i := 0; i < sampler.Size(); i++ {
-		sample, weight := sampler.Get(i)
+		point, weight := sampler.Get(i)
 		origWeight := sampler.GetOriginalWeight(i)
-		point := sample.(point)
 		second := int(math.Floor(point.xvalue))
 		sampleCounts[point.color][second] += (weight / origWeight)
 		pointCounts[second]++
