@@ -1,0 +1,38 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    strategy:
+      matrix:
+        go-version: [1.21.3]
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+      id: go
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Build
+      run: make ci
+
+    - name: Code coverage
+      run: bash <(curl -s https://codecov.io/bash)
+    
+    - name: Send telemetry to Lightstep
+      uses: codeboten/github-action-to-otlp@v1
+      with:
+        endpoint: "ingest.lightstep.com:443"
+        headers: "lightstep-access-token=${{ secrets.ACCESS_TOKEN }}"
