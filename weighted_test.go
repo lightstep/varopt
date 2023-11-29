@@ -28,7 +28,7 @@ func ExampleNew() {
 	trueTotalWeight := 0.0
 
 	rnd := rand.New(rand.NewSource(32491))
-	sampler := varopt.New(totalPackets*sampleRatio, rnd)
+	sampler := varopt.New[packet](totalPackets*sampleRatio, rnd)
 
 	for i := 0; i < totalPackets; i++ {
 		packet := packet{
@@ -49,8 +49,7 @@ func ExampleNew() {
 	estTotalWeight := 0.0
 
 	for i := 0; i < sampler.Size(); i++ {
-		sample, weight := sampler.Get(i)
-		packet := sample.(packet)
+		packet, weight := sampler.Get(i)
 		estSizeByColor[packet.color] += weight
 		estSizeByProtocol[packet.protocol] += weight
 		estTotalWeight += weight
