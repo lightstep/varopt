@@ -1,0 +1,72 @@
+package tdigest
+
+import (
+	"fmt"
+	"math"
+
+	"github.com/jmacd/gospline"
+)
+
+// MonotoneSpline uses cubic monotone interpolation.
+// TODO: If this works out, the gospline can be optimized a bit.
+type MonotoneSpline struct {
+	t      *TDigest
+	spline gospline.Spline
+	iwidth float64
+}
+
+var _ ProbabilityFunc = &MonotoneSpline{}
+
+func newSplineFunc(t *TDigest) *MonotoneSpline {
+	xvalues := make([]float64, len(t.Digest)+2)
+	yvalues := make([]float64, len(t.Digest)+2)
+
+	// Place 0 and 1 probabilities
+	xvalues[0] = -1e100
+	xvalues[len(t.Digest)+1] = +1e100
+	yvalues[0] = 0
+	yvalues[len(t.Digest)+1] = 1
+
+	cum := 0.0
+	min := math.MaxFloat64
+	max := -math.MaxFloat64
+	for i, c := range t.Digest {
+		mean := c.Sum / c.Weight
+		c.Mean = mean
+		cum += c.Weight / t.SumWeight
+		xvalues[i+1] = mean
+		yvalues[i+1] = cum
+		min = math.Min(min, mean)
+		max = math.Max(max, mean)
+	}
+
+	return &MonotoneSpline{
+		t:      t,
+		spline: gospline.NewMonotoneSpline(xvalues, yvalues),
+		iwidth: (max - min) / (8 * float64(len(t.Digest))),
+	}
+}
+
+// Probability interpolates the PDF.  Uses cubic monotone spline
+// interpolation.
+//
+// TODO Instead of computing At() twice, can we interpolate the PDF
+// directly?
+func (m *MonotoneSpline) Probability(value float64) float64 {
+	if value < m.t.Digest[0].Mean {
+		return m.t.Digest[0].Weight / (2 * m.t.SumWeight)
+	}
+	if value > m.t.Digest[len(m.t.Digest)-1].Mean {
+		return m.t.Digest[len(m.t.Digest)-1].Weight / (2 * m.t.SumWeight)
+	}
+
+	// TODO: Note that this not symmetrical, should be.  Requires
+	// care on the boundaries to center this (vs. the above
+	// special cases).
+	below := m.spline.At(value)
+	above := m.spline.At(value + m.iwidth)
+	if above == below {
+		fmt.Println("Zero prob at", value, below, above)
+	}
+	return (above - below) / (m.iwidth)
+}
